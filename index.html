@@ -1,0 +1,1131 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>স্টুডেন্ট ম্যানেজমেন্ট সিস্টেম</title>
+    <link href="https://fonts.googleapis.com/css2?family=Hind+Siliguri:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary-color: #4361ee;
+            --secondary-color: #3f37c9;
+            --accent-color: #4895ef;
+            --success-color: #4cc9f0;
+            --warning-color: #f8961e;
+            --danger-color: #f72585;
+            --light-color: #f8f9fa;
+            --dark-color: #212529;
+            --card-bg: #ffffff;
+            --body-bg: #f5f7ff;
+            --border-color: #e0e0e0;
+            --text-color: #333333;
+            --text-light: #6c757d;
+        }
+        
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Hind Siliguri', sans-serif;
+        }
+        
+        body {
+            background-color: var(--body-bg);
+            color: var(--text-color);
+            line-height: 1.6;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        
+        h1, h2, h3, h4 {
+            color: var(--primary-color);
+            margin-bottom: 15px;
+            font-weight: 700;
+        }
+        
+        h1 {
+            font-size: 2.2rem;
+            margin-bottom: 30px;
+            text-align: center;
+            padding-bottom: 15px;
+            border-bottom: 2px solid var(--primary-color);
+        }
+        
+        /* Card Styles */
+        .card {
+            background: var(--card-bg);
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+            padding: 25px;
+            margin-bottom: 25px;
+            border: 1px solid var(--border-color);
+        }
+        
+        .form-card {
+            max-width: 600px;
+            margin: 0 auto 30px;
+        }
+        
+        /* Tabs */
+        .section-tabs {
+            display: flex;
+            margin-bottom: 20px;
+            border-bottom: 1px solid var(--border-color);
+            flex-wrap: wrap;
+            background: var(--card-bg);
+            border-radius: 8px 8px 0 0;
+            padding: 0 15px;
+        }
+        
+        .tab {
+            padding: 12px 24px;
+            background: none;
+            border: none;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: 600;
+            color: var(--text-light);
+            position: relative;
+            transition: all 0.3s ease;
+        }
+        
+        .tab:hover {
+            color: var(--primary-color);
+        }
+        
+        .tab.active {
+            color: var(--primary-color);
+        }
+        
+        .tab.active::after {
+            content: '';
+            position: absolute;
+            bottom: -1px;
+            left: 0;
+            width: 100%;
+            height: 3px;
+            background: var(--primary-color);
+            border-radius: 3px 3px 0 0;
+        }
+        
+        /* Tab Content */
+        .section-content {
+            display: none;
+            animation: fadeIn 0.3s ease;
+            background: var(--card-bg);
+            border-radius: 0 0 8px 8px;
+            padding: 25px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .section-content.active {
+            display: block;
+        }
+        
+        /* Form Styles */
+        .form-group {
+            margin-bottom: 20px;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 500;
+            color: var(--text-color);
+        }
+        
+        input, select {
+            width: 100%;
+            padding: 12px 15px;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            font-size: 16px;
+            font-family: 'Hind Siliguri', sans-serif;
+            transition: border 0.3s ease;
+            background-color: var(--light-color);
+        }
+        
+        input:focus, select:focus {
+            outline: none;
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 3px rgba(67, 97, 238, 0.2);
+        }
+        
+        button {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-family: 'Hind Siliguri', sans-serif;
+            font-weight: 600;
+            margin-right: 10px;
+            margin-bottom: 10px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        button i {
+            margin-right: 8px;
+        }
+        
+        .btn-primary {
+            background: var(--primary-color);
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            background: var(--secondary-color);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(67, 97, 238, 0.3);
+        }
+        
+        .btn-success {
+            background: var(--success-color);
+            color: white;
+        }
+        
+        .btn-success:hover {
+            background: #3ab4d8;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(76, 201, 240, 0.3);
+        }
+        
+        .btn-warning {
+            background: var(--warning-color);
+            color: white;
+        }
+        
+        .btn-warning:hover {
+            background: #e07c0e;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(248, 150, 30, 0.3);
+        }
+        
+        .btn-danger {
+            background: var(--danger-color);
+            color: white;
+        }
+        
+        .btn-danger:hover {
+            background: #e51778;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(247, 37, 133, 0.3);
+        }
+        
+        /* Scrollable Tables */
+        .table-container {
+            max-height: 500px;
+            overflow-y: auto;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            margin-bottom: 25px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-family: 'Hind Siliguri', sans-serif;
+        }
+        
+        th, td {
+            padding: 14px 16px;
+            text-align: left;
+            border-bottom: 1px solid var(--border-color);
+        }
+        
+        th {
+            background: var(--light-color);
+            font-weight: 600;
+            position: sticky;
+            top: 0;
+            color: var(--primary-color);
+        }
+        
+        tr:hover {
+            background: rgba(67, 97, 238, 0.05);
+        }
+        
+        .progress-container {
+            display: flex;
+            align-items: center;
+            margin-bottom: 20px;
+            background: var(--light-color);
+            padding: 15px;
+            border-radius: 8px;
+        }
+        
+        .progress-bar {
+            flex-grow: 1;
+            height: 20px;
+            background-color: #e9ecef;
+            border-radius: 10px;
+            overflow: hidden;
+            margin-left: 10px;
+            margin-right: 10px;
+            box-shadow: inset 0 1px 3px rgba(0,0,0,0.1);
+        }
+        
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, var(--primary-color), var(--accent-color));
+            width: 0%;
+            transition: width 0.6s ease;
+            border-radius: 10px;
+        }
+        
+        .completed {
+            color: var(--success-color);
+            font-weight: bold;
+        }
+        
+        .payment-record {
+            color: var(--warning-color);
+            font-weight: 500;
+        }
+        
+        .attendance-record {
+            color: var(--primary-color);
+        }
+        
+        .alert {
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            display: none;
+            font-weight: 500;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+        
+        .alert-success {
+            background-color: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        
+        .alert-danger {
+            background-color: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        
+        .checkbox-cell {
+            text-align: center;
+        }
+        
+        input[type="checkbox"] {
+            width: auto;
+            transform: scale(1.5);
+            accent-color: var(--primary-color);
+        }
+        
+        .action-buttons {
+            display: flex;
+            justify-content: flex-end;
+            margin-top: 20px;
+        }
+        
+        .section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+        
+        .badge {
+            display: inline-block;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: 600;
+            background: var(--light-color);
+            color: var(--text-color);
+        }
+        
+        .badge-primary {
+            background: var(--primary-color);
+            color: white;
+        }
+        
+        .badge-success {
+            background: var(--success-color);
+            color: white;
+        }
+        
+        .badge-warning {
+            background: var(--warning-color);
+            color: white;
+        }
+        
+        @media (max-width: 768px) {
+            .section-tabs {
+                flex-direction: column;
+            }
+            
+            .tab {
+                width: 100%;
+                text-align: left;
+                padding: 12px 20px;
+            }
+            
+            th, td {
+                padding: 10px 12px;
+                font-size: 14px;
+            }
+            
+            button {
+                width: 100%;
+                margin-bottom: 10px;
+            }
+            
+            .action-buttons {
+                flex-direction: column;
+            }
+        }
+    </style>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+<body>
+    <div class="container">
+        <h1><i class="fas fa-user-graduate"></i> স্টুডেন্ট ম্যানেজমেন্ট সিস্টেম</h1>
+        
+        <div id="success-alert" class="alert alert-success"></div>
+        <div id="error-alert" class="alert alert-danger"></div>
+        
+        <!-- Section Tabs -->
+        <div class="section-tabs">
+            <button class="tab active" data-section="registration"><i class="fas fa-user-plus"></i> রেজিস্ট্রেশন</button>
+            <button class="tab" data-section="attendance"><i class="fas fa-calendar-check"></i> পড়ানো/বেতন</button>
+            <button class="tab" data-section="records"><i class="fas fa-database"></i> সমস্ত রেকর্ড</button>
+        </div>
+        
+        <!-- Registration Section -->
+        <div class="section-content active" id="registration">
+            <div class="card form-card">
+                <h2><i class="fas fa-user-edit"></i> স্টুডেন্ট রেজিস্ট্রেশন</h2>
+                <form id="student-form">
+                    <div class="form-group">
+                        <label for="name"><i class="fas fa-user"></i> স্টুডেন্টের নাম</label>
+                        <input type="text" id="name" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="phone"><i class="fas fa-phone"></i> ফোন নম্বর</label>
+                        <input type="tel" id="phone">
+                    </div>
+                    <div class="form-group">
+                        <label for="section"><i class="fas fa-users"></i> সেকশন</label>
+                        <select id="section" required>
+                            <option value="">সিলেক্ট করুন</option>
+                            <option value="A">সেকশন A</option>
+                            <option value="B">সেকশন B</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="initial-classes"><i class="fas fa-history"></i> পূর্বে পড়ানো হয়েছে (দিন সংখ্যা)</label>
+                        <input type="number" id="initial-classes" min="0" max="11" value="0">
+                    </div>
+                    <div class="action-buttons">
+                        <button type="submit" class="btn-primary"><i class="fas fa-save"></i> রেজিস্টার করুন</button>
+                    </div>
+                </form>
+            </div>
+            
+            <div class="card">
+                <div class="section-header">
+                    <h2><i class="fas fa-users"></i> সকল স্টুডেন্ট</h2>
+                    <span class="badge badge-primary">মোট: <span id="total-students">0</span></span>
+                </div>
+                <div class="table-container">
+                    <table id="all-students-list">
+                        <thead>
+                            <tr>
+                                <th>সেকশন</th>
+                                <th>নাম</th>
+                                <th>ফোন</th>
+                                <th>মোট ক্লাস</th>
+                                <th>বাকি ক্লাস</th>
+                                <th>বেতন</th>
+                                <th>অ্যাকশন</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <!-- All students will be listed here -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Attendance Section -->
+        <div class="section-content" id="attendance">
+            <div class="card">
+                <h2><i class="fas fa-calendar-alt"></i> পড়ানো ও বেতন ম্যানেজমেন্ট</h2>
+                <div class="form-group">
+                    <label for="record-date"><i class="fas fa-calendar-day"></i> তারিখ</label>
+                    <input type="date" id="record-date" required>
+                </div>
+                
+                <div class="table-container">
+                    <h3><i class="fas fa-users"></i> সেকশন A</h3>
+                    <table id="attendance-list-a">
+                        <thead>
+                            <tr>
+                                <th>নাম</th>
+                                <th>ফোন</th>
+                                <th>মোট ক্লাস</th>
+                                <th>বাকি ক্লাস</th>
+                                <th class="checkbox-cell">পড়িয়েছি</th>
+                                <th class="checkbox-cell">বেতন</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <!-- Section A attendance will be listed here -->
+                        </tbody>
+                    </table>
+                </div>
+                
+                <div class="table-container">
+                    <h3><i class="fas fa-users"></i> সেকশন B</h3>
+                    <table id="attendance-list-b">
+                        <thead>
+                            <tr>
+                                <th>নাম</th>
+                                <th>ফোন</th>
+                                <th>মোট ক্লাস</th>
+                                <th>বাকি ক্লাস</th>
+                                <th class="checkbox-cell">পড়িয়েছি</th>
+                                <th class="checkbox-cell">বেতন</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <!-- Section B attendance will be listed here -->
+                        </tbody>
+                    </table>
+                </div>
+                
+                <div class="action-buttons">
+                    <button id="save-records" class="btn-success"><i class="fas fa-save"></i> সেভ করুন</button>
+                    <button id="reset-records" class="btn-warning"><i class="fas fa-undo"></i> রিসেট করুন</button>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Records Section -->
+        <div class="section-content" id="records">
+            <div class="card">
+                <h2><i class="fas fa-archive"></i> সমস্ত রেকর্ডস</h2>
+                
+                <div class="form-group">
+                    <label for="student-select"><i class="fas fa-user"></i> স্টুডেন্ট সিলেক্ট করুন</label>
+                    <select id="student-select">
+                        <option value="">সিলেক্ট করুন</option>
+                    </select>
+                </div>
+                
+                <div id="student-records-container" style="display: none;">
+                    <h3 id="student-name-display"></h3>
+                    
+                    <div class="progress-container">
+                        <span><i class="fas fa-chart-line"></i> প্রোগ্রেস:</span>
+                        <div class="progress-bar">
+                            <div class="progress-fill" id="progress-fill"></div>
+                        </div>
+                        <span id="progress-text" style="margin-left: 10px;"></span>
+                    </div>
+                    
+                    <div class="table-container">
+                        <h4><i class="fas fa-chalkboard-teacher"></i> পড়ানোর রেকর্ড</h4>
+                        <table id="teaching-records">
+                            <thead>
+                                <tr>
+                                    <th>তারিখ</th>
+                                    <th>স্ট্যাটাস</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <!-- Teaching records will be listed here -->
+                            </tbody>
+                        </table>
+                    </div>
+                    
+                    <div class="table-container">
+                        <h4><i class="fas fa-money-bill-wave"></i> বেতনের রেকর্ড</h4>
+                        <table id="payment-records">
+                            <thead>
+                                <tr>
+                                    <th>তারিখ</th>
+                                    <th>স্ট্যাটাস</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <!-- Payment records will be listed here -->
+                            </tbody>
+                        </table>
+                    </div>
+                    
+                    <div class="action-buttons">
+                        <button id="delete-student" class="btn-danger"><i class="fas fa-trash-alt"></i> স্টুডেন্ট ডিলেট করুন</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Global variables
+        let students = JSON.parse(localStorage.getItem('students')) || [];
+        let teachingRecords = JSON.parse(localStorage.getItem('teachingRecords')) || [];
+        let paymentRecords = JSON.parse(localStorage.getItem('paymentRecords')) || [];
+        
+        // DOM Content Loaded
+        document.addEventListener('DOMContentLoaded', function() {
+            // Set default date to today
+            const today = new Date().toISOString().split('T')[0];
+            document.getElementById('record-date').value = today;
+            
+            // Initialize tabs
+            initTabs();
+            
+            // Initialize forms
+            initForms();
+            
+            // Load all student lists
+            loadStudentLists();
+            
+            // Initialize save records button
+            document.getElementById('save-records').addEventListener('click', saveRecords);
+            
+            // Initialize reset records button
+            document.getElementById('reset-records').addEventListener('click', resetRecords);
+            
+            // Initialize student dropdown for records
+            document.getElementById('student-select').addEventListener('change', loadStudentRecords);
+            
+            // Initialize delete student button
+            document.getElementById('delete-student').addEventListener('click', deleteSelectedStudent);
+        });
+        
+        // Tab functionality
+        function initTabs() {
+            const tabs = document.querySelectorAll('.tab');
+            
+            tabs.forEach(tab => {
+                tab.addEventListener('click', function() {
+                    // Remove active class from all tabs and contents
+                    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+                    document.querySelectorAll('.section-content').forEach(c => c.classList.remove('active'));
+                    
+                    // Add active class to clicked tab
+                    this.classList.add('active');
+                    
+                    // Show corresponding content
+                    const sectionId = this.getAttribute('data-section');
+                    document.getElementById(sectionId).classList.add('active');
+                    
+                    // If attendance tab is clicked, load attendance lists
+                    if (sectionId === 'attendance') {
+                        loadAttendanceLists();
+                    }
+                    
+                    // If records tab is clicked, update student dropdown
+                    if (sectionId === 'records') {
+                        updateStudentDropdown();
+                    }
+                });
+            });
+        }
+        
+        // Form functionality
+        function initForms() {
+            // Student registration form
+            document.getElementById('student-form').addEventListener('submit', function(e) {
+                e.preventDefault();
+                registerStudent();
+            });
+        }
+        
+        // Show alert message
+        function showAlert(type, message) {
+            const alertElement = type === 'success' 
+                ? document.getElementById('success-alert')
+                : document.getElementById('error-alert');
+            
+            alertElement.innerHTML = `<i class="fas fa-${type === 'success' ? 'check-circle' : 'exclamation-circle'}"></i> ${message}`;
+            alertElement.style.display = 'block';
+            
+            // Hide other alert
+            if (type === 'success') {
+                document.getElementById('error-alert').style.display = 'none';
+            } else {
+                document.getElementById('success-alert').style.display = 'none';
+            }
+            
+            // Auto hide after 3 seconds
+            setTimeout(() => {
+                alertElement.style.display = 'none';
+            }, 3000);
+        }
+        
+        // Register a new student
+        function registerStudent() {
+            const nameInput = document.getElementById('name');
+            const phoneInput = document.getElementById('phone');
+            const sectionInput = document.getElementById('section');
+            const initialClassesInput = document.getElementById('initial-classes');
+            
+            // Validate inputs
+            if (!nameInput.value.trim()) {
+                showAlert('error', 'দয়া করে স্টুডেন্টের নাম লিখুন');
+                return;
+            }
+            
+            if (!sectionInput.value) {
+                showAlert('error', 'দয়া করে সেকশন সিলেক্ট করুন');
+                return;
+            }
+            
+            const initialClasses = parseInt(initialClassesInput.value) || 0;
+            if (initialClasses < 0 || initialClasses > 11) {
+                showAlert('error', 'পূর্বে পড়ানো দিন সংখ্যা ০ থেকে ১১ এর মধ্যে হতে হবে');
+                return;
+            }
+            
+            const newStudent = {
+                id: Date.now(),
+                name: nameInput.value.trim(),
+                phone: phoneInput.value.trim(),
+                section: sectionInput.value,
+                initialClasses: initialClasses
+            };
+            
+            students.push(newStudent);
+            saveStudents();
+            
+            // Reset form
+            nameInput.value = '';
+            phoneInput.value = '';
+            sectionInput.value = '';
+            initialClassesInput.value = '0';
+            
+            // Update student lists
+            loadStudentLists();
+            updateStudentDropdown();
+            
+            showAlert('success', `${newStudent.name} সফলভাবে রেজিস্টার্ড হয়েছে!`);
+        }
+        
+        // Save students to localStorage
+        function saveStudents() {
+            localStorage.setItem('students', JSON.stringify(students));
+        }
+        
+        // Save teaching records to localStorage
+        function saveTeachingRecords() {
+            localStorage.setItem('teachingRecords', JSON.stringify(teachingRecords));
+        }
+        
+        // Save payment records to localStorage
+        function savePaymentRecords() {
+            localStorage.setItem('paymentRecords', JSON.stringify(paymentRecords));
+        }
+        
+        // Load all student lists
+        function loadStudentLists() {
+            // Update total students count
+            document.getElementById('total-students').textContent = students.length;
+            
+            // Load all students list
+            renderAllStudentsList('all-students-list', students);
+        }
+        
+        // Load attendance lists
+        function loadAttendanceLists() {
+            // Load section A students
+            const sectionAStudents = students.filter(student => student.section === 'A');
+            renderAttendanceList('attendance-list-a', sectionAStudents);
+            
+            // Load section B students
+            const sectionBStudents = students.filter(student => student.section === 'B');
+            renderAttendanceList('attendance-list-b', sectionBStudents);
+        }
+        
+        // Update student dropdown for records
+        function updateStudentDropdown() {
+            const dropdown = document.getElementById('student-select');
+            
+            // Clear existing options (except the first one)
+            while (dropdown.options.length > 1) {
+                dropdown.remove(1);
+            }
+            
+            // Add students to dropdown
+            students.forEach(student => {
+                const option = document.createElement('option');
+                option.value = student.id;
+                option.textContent = `${student.name} (সেকশন ${student.section})`;
+                dropdown.appendChild(option);
+            });
+        }
+        
+        // Load student records
+        function loadStudentRecords() {
+            const studentId = parseInt(document.getElementById('student-select').value);
+            const container = document.getElementById('student-records-container');
+            
+            if (!studentId) {
+                container.style.display = 'none';
+                return;
+            }
+            
+            const student = students.find(s => s.id === studentId);
+            if (!student) return;
+            
+            // Show container
+            container.style.display = 'block';
+            
+            // Set student name
+            document.getElementById('student-name-display').innerHTML = `<i class="fas fa-user"></i> ${student.name} (সেকশন ${student.section})`;
+            
+            // Calculate total classes (initial + attended)
+            const attendedClasses = teachingRecords.filter(record => 
+                record.studentId === studentId
+            ).length;
+            
+            const totalClasses = student.initialClasses + attendedClasses;
+            const remainingClasses = Math.max(0, 12 - (totalClasses % 12));
+            const cycleCount = Math.floor(totalClasses / 12);
+            
+            // Update progress bar
+            const progressPercent = ((totalClasses % 12) / 12) * 100;
+            document.getElementById('progress-fill').style.width = `${progressPercent}%`;
+            
+            // Update progress text
+            let progressText = `${totalClasses % 12}/12 দিন (${remainingClasses} দিন বাকি)`;
+            if (cycleCount > 0) {
+                progressText += ` | ${cycleCount} বার সম্পূর্ণ হয়েছে`;
+            }
+            document.getElementById('progress-text').textContent = progressText;
+            
+            // Load teaching records
+            const studentTeachingRecords = teachingRecords
+                .filter(record => record.studentId === studentId)
+                .sort((a, b) => new Date(b.date) - new Date(a.date));
+            
+            renderRecordsList('teaching-records', studentTeachingRecords, '<i class="fas fa-check"></i> পড়ানো হয়েছে', 'attendance-record');
+            
+            // Load payment records
+            const studentPaymentRecords = paymentRecords
+                .filter(record => record.studentId === studentId)
+                .sort((a, b) => new Date(b.date) - new Date(a.date));
+            
+            renderRecordsList('payment-records', studentPaymentRecords, '<i class="fas fa-check"></i> বেতন প্রদান', 'payment-record');
+        }
+        
+        // Render attendance list for a section
+        function renderAttendanceList(elementId, studentList) {
+            const tableBody = document.getElementById(elementId).querySelector('tbody');
+            tableBody.innerHTML = '';
+            
+            if (studentList.length === 0) {
+                tableBody.innerHTML = `<tr><td colspan="6">কোনো স্টুডেন্ট রেজিস্টার্ড হয়নি</td></tr>`;
+                return;
+            }
+            
+            const currentDate = document.getElementById('record-date').value;
+            const todayRecords = teachingRecords.filter(record => record.date === currentDate);
+            const todayPayments = paymentRecords.filter(record => record.date === currentDate);
+            
+            studentList.forEach(student => {
+                const attendedClasses = teachingRecords.filter(record => 
+                    record.studentId === student.id
+                ).length;
+                
+                const totalClasses = student.initialClasses + attendedClasses;
+                const remainingClasses = Math.max(0, 12 - (totalClasses % 12));
+                
+                const isMarkedToday = todayRecords.some(record => record.studentId === student.id);
+                const isPaidToday = todayPayments.some(record => record.studentId === student.id);
+                
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${student.name}</td>
+                    <td>${student.phone || 'N/A'}</td>
+                    <td>${totalClasses % 12}</td>
+                    <td>${remainingClasses}</td>
+                    <td class="checkbox-cell"><input type="checkbox" class="teaching-check" data-id="${student.id}" ${isMarkedToday ? 'checked' : ''}></td>
+                    <td class="checkbox-cell"><input type="checkbox" class="payment-check" data-id="${student.id}" ${isPaidToday ? 'checked' : ''}></td>
+                `;
+                
+                // Highlight if completed a cycle
+                if (totalClasses > 0 && totalClasses % 12 === 0) {
+                    row.classList.add('completed');
+                }
+                
+                tableBody.appendChild(row);
+            });
+        }
+        
+        // Render all students list
+        function renderAllStudentsList(elementId, studentList) {
+            const tableBody = document.getElementById(elementId).querySelector('tbody');
+            tableBody.innerHTML = '';
+            
+            if (studentList.length === 0) {
+                tableBody.innerHTML = `<tr><td colspan="7">কোনো স্টুডেন্ট রেজিস্টার্ড হয়নি</td></tr>`;
+                return;
+            }
+            
+            // Sort by section
+            studentList.sort((a, b) => a.section.localeCompare(b.section));
+            
+            studentList.forEach(student => {
+                const attendedClasses = teachingRecords.filter(record => 
+                    record.studentId === student.id
+                ).length;
+                
+                const totalClasses = student.initialClasses + attendedClasses;
+                const remainingClasses = Math.max(0, 12 - (totalClasses % 12));
+                
+                const paymentCount = paymentRecords.filter(record => 
+                    record.studentId === student.id
+                ).length;
+                
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>সেকশন ${student.section}</td>
+                    <td>${student.name}</td>
+                    <td>${student.phone || 'N/A'}</td>
+                    <td>${totalClasses % 12}</td>
+                    <td>${remainingClasses}</td>
+                    <td>${paymentCount} বার</td>
+                    <td><button class="btn-danger btn-delete" data-id="${student.id}"><i class="fas fa-trash-alt"></i> ডিলেট</button></td>
+                `;
+                
+                // Highlight if completed a cycle
+                if (totalClasses > 0 && totalClasses % 12 === 0) {
+                    row.classList.add('completed');
+                }
+                
+                tableBody.appendChild(row);
+            });
+            
+            // Add event listeners to delete buttons
+            document.querySelectorAll('.btn-delete').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    deleteStudent(parseInt(this.getAttribute('data-id')));
+                });
+            });
+        }
+        
+        // Render records list
+        function renderRecordsList(elementId, records, statusText, rowClass = '') {
+            const tableBody = document.getElementById(elementId).querySelector('tbody');
+            tableBody.innerHTML = '';
+            
+            if (records.length === 0) {
+                tableBody.innerHTML = `<tr><td colspan="2">কোনো রেকর্ড পাওয়া যায়নি</td></tr>`;
+                return;
+            }
+            
+            records.forEach(record => {
+                const row = document.createElement('tr');
+                if (rowClass) row.classList.add(rowClass);
+                row.innerHTML = `
+                    <td>${formatDate(record.date)}</td>
+                    <td>${statusText}</td>
+                `;
+                tableBody.appendChild(row);
+            });
+        }
+        
+        // Save records
+        function saveRecords() {
+            const date = document.getElementById('record-date').value;
+            if (!date) {
+                showAlert('error', 'দয়া করে তারিখ সিলেক্ট করুন');
+                return;
+            }
+            
+            // Get all checked teaching checkboxes
+            const teachingCheckboxes = document.querySelectorAll('.teaching-check:checked');
+            
+            // Get all checked payment checkboxes
+            const paymentCheckboxes = document.querySelectorAll('.payment-check:checked');
+            
+            if (teachingCheckboxes.length === 0 && paymentCheckboxes.length === 0) {
+                showAlert('error', 'কোনো তথ্য সিলেক্ট করা হয়নি');
+                return;
+            }
+            
+            // Add teaching records for checked students
+            teachingCheckboxes.forEach(checkbox => {
+                const studentId = parseInt(checkbox.getAttribute('data-id'));
+                const student = students.find(s => s.id === studentId);
+                
+                if (!student) return;
+                
+                // Calculate total classes (initial + attended)
+                const attendedClasses = teachingRecords.filter(record => 
+                    record.studentId === studentId
+                ).length;
+                
+                const totalClasses = student.initialClasses + attendedClasses + 1;
+                
+                // Check if this completes a 12-day cycle
+                if (totalClasses % 12 === 0) {
+                    if (!confirm(`${student.name} এর ১২টি ক্লাস সম্পূর্ণ হয়েছে। নতুন সাইকেল শুরু করতে চান?`)) {
+                        return;
+                    }
+                }
+                
+                // Check if record already exists for this student on this date
+                const exists = teachingRecords.some(record => 
+                    record.studentId === studentId && record.date === date
+                );
+                
+                if (!exists) {
+                    teachingRecords.push({
+                        studentId: studentId,
+                        date: date,
+                        status: 'পড়ানো হয়েছে'
+                    });
+                }
+            });
+            
+            // Add payment records for checked students
+            paymentCheckboxes.forEach(checkbox => {
+                const studentId = parseInt(checkbox.getAttribute('data-id'));
+                
+                // Check if record already exists for this student on this date
+                const exists = paymentRecords.some(record => 
+                    record.studentId === studentId && record.date === date
+                );
+                
+                if (!exists) {
+                    paymentRecords.push({
+                        studentId: studentId,
+                        date: date,
+                        status: 'বেতন প্রদান করা হয়েছে'
+                    });
+                }
+            });
+            
+            saveTeachingRecords();
+            savePaymentRecords();
+            showAlert('success', 'তথ্য সফলভাবে সেভ করা হয়েছে!');
+            
+            // Update all lists
+            loadStudentLists();
+            loadAttendanceLists();
+            
+            // Update records if on that tab
+            if (document.getElementById('records').classList.contains('active')) {
+                loadStudentRecords();
+            }
+        }
+        
+        // Reset records for selected date
+        function resetRecords() {
+            const date = document.getElementById('record-date').value;
+            if (!date) {
+                showAlert('error', 'দয়া করে তারিখ সিলেক্ট করুন');
+                return;
+            }
+            
+            if (!confirm(`আপনি কি নিশ্চিত ${date} তারিখের সকল রেকর্ড রিসেট করতে চান?`)) {
+                return;
+            }
+            
+            // Remove teaching records for selected date
+            teachingRecords = teachingRecords.filter(record => record.date !== date);
+            
+            // Remove payment records for selected date
+            paymentRecords = paymentRecords.filter(record => record.date !== date);
+            
+            saveTeachingRecords();
+            savePaymentRecords();
+            showAlert('success', 'রেকর্ডস সফলভাবে রিসেট করা হয়েছে!');
+            
+            // Update all lists
+            loadStudentLists();
+            loadAttendanceLists();
+            
+            // Update records if on that tab
+            if (document.getElementById('records').classList.contains('active')) {
+                loadStudentRecords();
+            }
+        }
+        
+        // Delete a student and all related records
+        function deleteStudent(studentId) {
+            if (!confirm('আপনি কি নিশ্চিত এই স্টুডেন্ট ডিলেট করতে চান? এর সাথে সাথে সকল পড়ানো ও বেতনের রেকর্ডও ডিলেট হয়ে যাবে!')) {
+                return;
+            }
+            
+            // Delete student
+            students = students.filter(student => student.id !== studentId);
+            
+            // Delete teaching records
+            teachingRecords = teachingRecords.filter(record => record.studentId !== studentId);
+            
+            // Delete payment records
+            paymentRecords = paymentRecords.filter(record => record.studentId !== studentId);
+            
+            // Save all changes
+            saveStudents();
+            saveTeachingRecords();
+            savePaymentRecords();
+            
+            // Update all lists
+            loadStudentLists();
+            
+            // Reload attendance lists if on that tab
+            if (document.getElementById('attendance').classList.contains('active')) {
+                loadAttendanceLists();
+            }
+            
+            // Hide records if showing the deleted student
+            if (document.getElementById('records').classList.contains('active') && 
+                parseInt(document.getElementById('student-select').value) === studentId) {
+                document.getElementById('student-records-container').style.display = 'none';
+                document.getElementById('student-select').value = '';
+            }
+            
+            // Update student dropdown
+            updateStudentDropdown();
+            
+            showAlert('success', 'স্টুডেন্ট এবং সংশ্লিষ্ট সকল রেকর্ড সফলভাবে ডিলেট করা হয়েছে!');
+        }
+        
+        // Delete selected student from records tab
+        function deleteSelectedStudent() {
+            const studentId = parseInt(document.getElementById('student-select').value);
+            if (!studentId) {
+                showAlert('error', 'দয়া করে একটি স্টুডেন্ট সিলেক্ট করুন');
+                return;
+            }
+            
+            deleteStudent(studentId);
+        }
+        
+        // Format date for display
+        function formatDate(dateString) {
+            if (!dateString) return 'N/A';
+            const options = { year: 'numeric', month: 'long', day: 'numeric' };
+            return new Date(dateString).toLocaleDateString('bn-BD', options);
+        }
+    </script>
+</body>
+</html>
