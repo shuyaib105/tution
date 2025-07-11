@@ -428,13 +428,13 @@
                         <label for="section"><i class="fas fa-users"></i> সেকশন</label>
                         <select id="section" required>
                             <option value="">সিলেক্ট করুন</option>
-                            <option value="A">শনি-সোম-বুধ </option>
-                            <option value="B">রবি-মঙ্গল-বৃহস্পতিবার</option>
+                            <option value="A">সেকশন A</option>
+                            <option value="B">সেকশন B</option>
                         </select>
                     </div>
                     <div class="form-group">
                         <label for="initial-classes"><i class="fas fa-history"></i> পূর্বে পড়ানো হয়েছে (দিন সংখ্যা)</label>
-                        <input type="number" id="initial-classes" min="0" max="11" value="0">
+                        <input type="number" id="initial-classes" min="0" value="0">
                     </div>
                     <div class="action-buttons">
                         <button type="submit" class="btn-primary"><i class="fas fa-save"></i> রেজিস্টার করুন</button>
@@ -455,7 +455,6 @@
                                 <th>নাম</th>
                                 <th>ফোন</th>
                                 <th>মোট ক্লাস</th>
-                                <th>বাকি ক্লাস</th>
                                 <th>বেতন</th>
                                 <th>অ্যাকশন</th>
                             </tr>
@@ -478,14 +477,13 @@
                 </div>
                 
                 <div class="table-container">
-                    <h3><i class="fas fa-users"></i> শনি-সোম-বুধ </h3>
+                    <h3><i class="fas fa-users"></i> সেকশন A</h3>
                     <table id="attendance-list-a">
                         <thead>
                             <tr>
                                 <th>নাম</th>
                                 <th>ফোন</th>
                                 <th>মোট ক্লাস</th>
-                                <th>বাকি ক্লাস</th>
                                 <th class="checkbox-cell">পড়িয়েছি</th>
                                 <th class="checkbox-cell">বেতন</th>
                             </tr>
@@ -497,14 +495,13 @@
                 </div>
                 
                 <div class="table-container">
-                    <h3><i class="fas fa-users"></i> রবি-মঙ্গল-বৃহস্পতিবার</h3>
+                    <h3><i class="fas fa-users"></i> সেকশন B</h3>
                     <table id="attendance-list-b">
                         <thead>
                             <tr>
                                 <th>নাম</th>
                                 <th>ফোন</th>
                                 <th>মোট ক্লাস</th>
-                                <th>বাকি ক্লাস</th>
                                 <th class="checkbox-cell">পড়িয়েছি</th>
                                 <th class="checkbox-cell">বেতন</th>
                             </tr>
@@ -697,8 +694,8 @@
             }
             
             const initialClasses = parseInt(initialClassesInput.value) || 0;
-            if (initialClasses < 0 || initialClasses > 11) {
-                showAlert('error', 'পূর্বে পড়ানো দিন সংখ্যা ০ থেকে ১১ এর মধ্যে হতে হবে');
+            if (initialClasses < 0) {
+                showAlert('error', 'পূর্বে পড়ানো দিন সংখ্যা ০ বা তার বেশি হতে হবে');
                 return;
             }
             
@@ -707,7 +704,8 @@
                 name: nameInput.value.trim(),
                 phone: phoneInput.value.trim(),
                 section: sectionInput.value,
-                initialClasses: initialClasses
+                initialClasses: initialClasses,
+                currentCycleStart: new Date().toISOString().split('T')[0] // Track current cycle start date
             };
             
             students.push(newStudent);
@@ -798,25 +796,24 @@
             // Set student name
             document.getElementById('student-name-display').innerHTML = `<i class="fas fa-user"></i> ${student.name} (সেকশন ${student.section})`;
             
-            // Calculate total classes (initial + attended)
+            // Calculate total classes (initial + attended since last payment)
+            const lastPaymentDate = paymentRecords
+                .filter(record => record.studentId === studentId)
+                .sort((a, b) => new Date(b.date) - new Date(a.date))[0]?.date || student.currentCycleStart;
+            
             const attendedClasses = teachingRecords.filter(record => 
-                record.studentId === studentId
+                record.studentId === studentId && 
+                new Date(record.date) >= new Date(lastPaymentDate)
             ).length;
             
-            const totalClasses = student.initialClasses + attendedClasses;
-            const remainingClasses = Math.max(0, 12 - (totalClasses % 12));
-            const cycleCount = Math.floor(totalClasses / 12);
+            const totalClasses = attendedClasses;
+            const progressPercent = (totalClasses / 12) * 100;
             
             // Update progress bar
-            const progressPercent = ((totalClasses % 12) / 12) * 100;
             document.getElementById('progress-fill').style.width = `${progressPercent}%`;
             
             // Update progress text
-            let progressText = `${totalClasses % 12}/12 দিন (${remainingClasses} দিন বাকি)`;
-            if (cycleCount > 0) {
-                progressText += ` | ${cycleCount} বার সম্পূর্ণ হয়েছে`;
-            }
-            document.getElementById('progress-text').textContent = progressText;
+            document.getElementById('progress-text').textContent = `${totalClasses}/12 দিন`;
             
             // Load teaching records
             const studentTeachingRecords = teachingRecords
@@ -839,7 +836,7 @@
             tableBody.innerHTML = '';
             
             if (studentList.length === 0) {
-                tableBody.innerHTML = `<tr><td colspan="6">কোনো স্টুডেন্ট রেজিস্টার্ড হয়নি</td></tr>`;
+                tableBody.innerHTML = `<tr><td colspan="5">কোনো স্টুডেন্ট রেজিস্টার্ড হয়নি</td></tr>`;
                 return;
             }
             
@@ -848,12 +845,14 @@
             const todayPayments = paymentRecords.filter(record => record.date === currentDate);
             
             studentList.forEach(student => {
-                const attendedClasses = teachingRecords.filter(record => 
-                    record.studentId === student.id
-                ).length;
+                const lastPaymentDate = paymentRecords
+                    .filter(record => record.studentId === student.id)
+                    .sort((a, b) => new Date(b.date) - new Date(a.date))[0]?.date || student.currentCycleStart;
                 
-                const totalClasses = student.initialClasses + attendedClasses;
-                const remainingClasses = Math.max(0, 12 - (totalClasses % 12));
+                const attendedClasses = teachingRecords.filter(record => 
+                    record.studentId === student.id && 
+                    new Date(record.date) >= new Date(lastPaymentDate)
+                ).length;
                 
                 const isMarkedToday = todayRecords.some(record => record.studentId === student.id);
                 const isPaidToday = todayPayments.some(record => record.studentId === student.id);
@@ -862,16 +861,10 @@
                 row.innerHTML = `
                     <td>${student.name}</td>
                     <td>${student.phone || 'N/A'}</td>
-                    <td>${totalClasses % 12}</td>
-                    <td>${remainingClasses}</td>
+                    <td>${attendedClasses}</td>
                     <td class="checkbox-cell"><input type="checkbox" class="teaching-check" data-id="${student.id}" ${isMarkedToday ? 'checked' : ''}></td>
                     <td class="checkbox-cell"><input type="checkbox" class="payment-check" data-id="${student.id}" ${isPaidToday ? 'checked' : ''}></td>
                 `;
-                
-                // Highlight if completed a cycle
-                if (totalClasses > 0 && totalClasses % 12 === 0) {
-                    row.classList.add('completed');
-                }
                 
                 tableBody.appendChild(row);
             });
@@ -883,7 +876,7 @@
             tableBody.innerHTML = '';
             
             if (studentList.length === 0) {
-                tableBody.innerHTML = `<tr><td colspan="7">কোনো স্টুডেন্ট রেজিস্টার্ড হয়নি</td></tr>`;
+                tableBody.innerHTML = `<tr><td colspan="6">কোনো স্টুডেন্ট রেজিস্টার্ড হয়নি</td></tr>`;
                 return;
             }
             
@@ -891,12 +884,14 @@
             studentList.sort((a, b) => a.section.localeCompare(b.section));
             
             studentList.forEach(student => {
-                const attendedClasses = teachingRecords.filter(record => 
-                    record.studentId === student.id
-                ).length;
+                const lastPaymentDate = paymentRecords
+                    .filter(record => record.studentId === student.id)
+                    .sort((a, b) => new Date(b.date) - new Date(a.date))[0]?.date || student.currentCycleStart;
                 
-                const totalClasses = student.initialClasses + attendedClasses;
-                const remainingClasses = Math.max(0, 12 - (totalClasses % 12));
+                const attendedClasses = teachingRecords.filter(record => 
+                    record.studentId === student.id && 
+                    new Date(record.date) >= new Date(lastPaymentDate)
+                ).length;
                 
                 const paymentCount = paymentRecords.filter(record => 
                     record.studentId === student.id
@@ -907,16 +902,10 @@
                     <td>সেকশন ${student.section}</td>
                     <td>${student.name}</td>
                     <td>${student.phone || 'N/A'}</td>
-                    <td>${totalClasses % 12}</td>
-                    <td>${remainingClasses}</td>
+                    <td>${attendedClasses}</td>
                     <td>${paymentCount} বার</td>
                     <td><button class="btn-danger btn-delete" data-id="${student.id}"><i class="fas fa-trash-alt"></i> ডিলেট</button></td>
                 `;
-                
-                // Highlight if completed a cycle
-                if (totalClasses > 0 && totalClasses % 12 === 0) {
-                    row.classList.add('completed');
-                }
                 
                 tableBody.appendChild(row);
             });
@@ -976,20 +965,6 @@
                 
                 if (!student) return;
                 
-                // Calculate total classes (initial + attended)
-                const attendedClasses = teachingRecords.filter(record => 
-                    record.studentId === studentId
-                ).length;
-                
-                const totalClasses = student.initialClasses + attendedClasses + 1;
-                
-                // Check if this completes a 12-day cycle
-                if (totalClasses % 12 === 0) {
-                    if (!confirm(`${student.name} এর ১২টি ক্লাস সম্পূর্ণ হয়েছে। নতুন সাইকেল শুরু করতে চান?`)) {
-                        return;
-                    }
-                }
-                
                 // Check if record already exists for this student on this date
                 const exists = teachingRecords.some(record => 
                     record.studentId === studentId && record.date === date
@@ -1007,6 +982,9 @@
             // Add payment records for checked students
             paymentCheckboxes.forEach(checkbox => {
                 const studentId = parseInt(checkbox.getAttribute('data-id'));
+                const student = students.find(s => s.id === studentId);
+                
+                if (!student) return;
                 
                 // Check if record already exists for this student on this date
                 const exists = paymentRecords.some(record => 
@@ -1014,6 +992,29 @@
                 );
                 
                 if (!exists) {
+                    // Calculate classes since last payment
+                    const lastPaymentDate = paymentRecords
+                        .filter(record => record.studentId === studentId)
+                        .sort((a, b) => new Date(b.date) - new Date(a.date))[0]?.date || student.currentCycleStart;
+                    
+                    const attendedClasses = teachingRecords.filter(record => 
+                        record.studentId === studentId && 
+                        new Date(record.date) >= new Date(lastPaymentDate)
+                    ).length;
+                    
+                    // Show confirmation for starting new cycle
+                    let confirmMessage = `${student.name} এর জন্য নতুন সাইকেল শুরু করতে চান?`;
+                    
+                    if (attendedClasses < 12) {
+                        confirmMessage = `${student.name} এর মাত্র ${attendedClasses} দিন পড়ানো হয়েছে (১২ দিনের কম)। তবুও নতুন সাইকেল শুরু করতে চান?`;
+                    } else if (attendedClasses > 12) {
+                        confirmMessage = `${student.name} এর ${attendedClasses} দিন পড়ানো হয়েছে (১২ দিনের বেশি)। তবুও নতুন সাইকেল শুরু করতে চান?`;
+                    }
+                    
+                    if (!confirm(confirmMessage)) {
+                        return;
+                    }
+                    
                     paymentRecords.push({
                         studentId: studentId,
                         date: date,
