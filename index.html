@@ -394,11 +394,54 @@
                 flex-direction: column;
             }
         }
+
+        /* Firebase Auth UI Styles */
+        #auth-container {
+            text-align: center;
+            margin: 20px 0;
+        }
+
+        #user-info {
+            display: none;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 20px;
+        }
+
+        #user-pic {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            margin-right: 10px;
+        }
+
+        #user-name {
+            font-weight: 600;
+            margin-right: 15px;
+        }
     </style>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/9.6.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.0/firebase-database-compat.js"></script>
 </head>
 <body>
     <div class="container">
+        <!-- Firebase Auth UI -->
+        <div id="auth-container">
+            <div id="user-info">
+                <img id="user-pic" src="">
+                <span id="user-name"></span>
+                <button onclick="firebase.auth().signOut()" class="btn-danger">
+                    <i class="fas fa-sign-out-alt"></i> লগআউট
+                </button>
+            </div>
+            <button id="google-login-btn" class="btn-primary">
+                <i class="fab fa-google"></i> গুগল দিয়ে লগইন
+            </button>
+        </div>
+
         <h1><i class="fas fa-user-graduate"></i> স্টুডেন্ট ম্যানেজমেন্ট সিস্টেম</h1>
         
         <div id="success-alert" class="alert alert-success"></div>
@@ -428,8 +471,8 @@
                         <label for="section"><i class="fas fa-users"></i> সেকশন</label>
                         <select id="section" required>
                             <option value="">সিলেক্ট করুন</option>
-                            <option value="A">শনি - সোম - বুধ</option>
-                            <option value="B">রবি - মঙ্গল - বৃহস্পতি</option>
+                            <option value="শনি - সোম - বুধ">শনি - সোম - বুধ</option>
+                            <option value="রবি - মঙ্গল - বৃহস্পতি">রবি - মঙ্গল - বৃহস্পতি</option>
                         </select>
                     </div>
                     <div class="action-buttons">
@@ -527,7 +570,7 @@
                     </select>
                 </div>
                 
-                <div id="student-records-container" style="display: none;">
+                <div id="student-records-container" style="display:none;">
                     <h3 id="student-name-display"></h3>
                     
                     <div class="progress-container">
@@ -577,10 +620,28 @@
     </div>
 
     <script>
+        // Firebase configuration
+        const firebaseConfig = {
+            apiKey: "AIzaSyAEe2ayxZevgU9-Nvv8HiD2mYLsdvQyJ2k",
+            authDomain: "student-managment-system-a9c4e.firebaseapp.com",
+            databaseURL: "https://student-managment-system-a9c4e-default-rtdb.firebaseio.com",
+            projectId: "student-managment-system-a9c4e",
+            storageBucket: "student-managment-system-a9c4e.appspot.com",
+            messagingSenderId: "521962782265",
+            appId: "1:521962782265:web:c2458650f72353cfee57e8"
+        };
+
+        // Initialize Firebase
+        firebase.initializeApp(firebaseConfig);
+
+        // Firebase services
+        const auth = firebase.auth();
+        const database = firebase.database();
+
         // Global variables
-        let students = JSON.parse(localStorage.getItem('students')) || [];
-        let teachingRecords = JSON.parse(localStorage.getItem('teachingRecords')) || [];
-        let paymentRecords = JSON.parse(localStorage.getItem('paymentRecords')) || [];
+        let students = [];
+        let teachingRecords = [];
+        let paymentRecords = [];
         
         // DOM Content Loaded
         document.addEventListener('DOMContentLoaded', function() {
@@ -588,14 +649,14 @@
             const today = new Date().toISOString().split('T')[0];
             document.getElementById('record-date').value = today;
             
+            // Initialize authentication
+            initAuth();
+            
             // Initialize tabs
             initTabs();
             
             // Initialize forms
             initForms();
-            
-            // Load all student lists
-            loadStudentLists();
             
             // Initialize save records button
             document.getElementById('save-records').addEventListener('click', saveRecords);
@@ -609,6 +670,89 @@
             // Initialize delete student button
             document.getElementById('delete-student').addEventListener('click', deleteSelectedStudent);
         });
+        
+        // Authentication functions
+        function initAuth() {
+            // Google login button
+            document.getElementById('google-login-btn').addEventListener('click', googleSignIn);
+            
+            // Auth state listener
+            auth.onAuthStateChanged((user) => {
+                if (user) {
+                    // User is signed in
+                    showUserInfo(user);
+                    document.getElementById('google-login-btn').style.display = 'none';
+                    document.getElementById('user-info').style.display = 'flex';
+                    
+                    // Show app content
+                    document.querySelectorAll('.tab').forEach(el => el.style.display = 'block');
+                    document.querySelector('.tab.active').click();
+                    
+                    // Load data for this user
+                    loadData();
+                } else {
+                    // User is signed out
+                    document.getElementById('google-login-btn').style.display = 'block';
+                    document.getElementById('user-info').style.display = 'none';
+                    
+                    // Hide all app content
+                    document.querySelectorAll('.section-content').forEach(el => el.style.display = 'none');
+                    document.querySelectorAll('.tab').forEach(el => el.style.display = 'none');
+                }
+            });
+        }
+        
+        function googleSignIn() {
+            const provider = new firebase.auth.GoogleAuthProvider();
+            auth.signInWithPopup(provider)
+                .catch((error) => {
+                    showAlert('error', `লগইন ব্যর্থ: ${error.message}`);
+                });
+        }
+        
+        function showUserInfo(user) {
+            document.getElementById('user-name').textContent = user.displayName || user.email;
+            document.getElementById('user-pic').src = user.photoURL || 'https://via.placeholder.com/40';
+        }
+        
+        // Load data from Firebase
+        function loadData() {
+            const userId = auth.currentUser.uid;
+            
+            // Load students
+            database.ref('users/' + userId + '/students').on('value', (snapshot) => {
+                students = [];
+                snapshot.forEach((childSnapshot) => {
+                    students.push({
+                        id: childSnapshot.key,
+                        ...childSnapshot.val()
+                    });
+                });
+                loadStudentLists();
+            });
+            
+            // Load teaching records
+            database.ref('users/' + userId + '/teachingRecords').on('value', (snapshot) => {
+                teachingRecords = [];
+                snapshot.forEach((childSnapshot) => {
+                    teachingRecords.push({
+                        id: childSnapshot.key,
+                        ...childSnapshot.val()
+                    });
+                });
+            });
+            
+            // Load payment records
+            database.ref('users/' + userId + '/paymentRecords').on('value', (snapshot) => {
+                paymentRecords = [];
+                snapshot.forEach((childSnapshot) => {
+                    paymentRecords.push({
+                        id: childSnapshot.key,
+                        ...childSnapshot.val()
+                    });
+                });
+            });
+        }
         
         // Tab functionality
         function initTabs() {
@@ -689,41 +833,28 @@
             }
             
             const newStudent = {
-                id: Date.now(),
                 name: nameInput.value.trim(),
                 phone: phoneInput.value.trim(),
                 section: sectionInput.value,
-                currentCycleStart: new Date().toISOString().split('T')[0] // Track current cycle start date
+                currentCycleStart: new Date().toISOString().split('T')[0],
+                createdAt: firebase.database.ServerValue.TIMESTAMP
             };
             
-            students.push(newStudent);
-            saveStudents();
-            
-            // Reset form
-            nameInput.value = '';
-            phoneInput.value = '';
-            sectionInput.value = '';
-            
-            // Update student lists
-            loadStudentLists();
-            updateStudentDropdown();
-            
-            showAlert('success', `${newStudent.name} সফলভাবে রেজিস্টার্ড হয়েছে!`);
-        }
-        
-        // Save students to localStorage
-        function saveStudents() {
-            localStorage.setItem('students', JSON.stringify(students));
-        }
-        
-        // Save teaching records to localStorage
-        function saveTeachingRecords() {
-            localStorage.setItem('teachingRecords', JSON.stringify(teachingRecords));
-        }
-        
-        // Save payment records to localStorage
-        function savePaymentRecords() {
-            localStorage.setItem('paymentRecords', JSON.stringify(paymentRecords));
+            const userId = auth.currentUser.uid;
+            const newStudentRef = database.ref('users/' + userId + '/students').push();
+            newStudent.id = newStudentRef.key;
+            newStudentRef.set(newStudent)
+                .then(() => {
+                    // Reset form
+                    nameInput.value = '';
+                    phoneInput.value = '';
+                    sectionInput.value = '';
+                    
+                    showAlert('success', `${newStudent.name} সফলভাবে রেজিস্টার্ড হয়েছে!`);
+                })
+                .catch(error => {
+                    showAlert('error', `স্টুডেন্ট সেভ করতে সমস্যা: ${error.message}`);
+                });
         }
         
         // Load all student lists
@@ -766,7 +897,7 @@
         
         // Load student records
         function loadStudentRecords() {
-            const studentId = parseInt(document.getElementById('student-select').value);
+            const studentId = document.getElementById('student-select').value;
             const container = document.getElementById('student-records-container');
             
             if (!studentId) {
@@ -899,7 +1030,7 @@
             // Add event listeners to delete buttons
             document.querySelectorAll('.btn-delete').forEach(btn => {
                 btn.addEventListener('click', function() {
-                    deleteStudent(parseInt(this.getAttribute('data-id')));
+                    deleteStudent(this.getAttribute('data-id'));
                 });
             });
         }
@@ -944,9 +1075,12 @@
                 return;
             }
             
+            const userId = auth.currentUser.uid;
+            const updates = {};
+            
             // Add teaching records for checked students
             teachingCheckboxes.forEach(checkbox => {
-                const studentId = parseInt(checkbox.getAttribute('data-id'));
+                const studentId = checkbox.getAttribute('data-id');
                 const student = students.find(s => s.id === studentId);
                 
                 if (!student) return;
@@ -957,17 +1091,19 @@
                 );
                 
                 if (!exists) {
-                    teachingRecords.push({
+                    const newRecordId = database.ref('users/' + userId + '/teachingRecords').push().key;
+                    updates['/users/' + userId + '/teachingRecords/' + newRecordId] = {
                         studentId: studentId,
                         date: date,
-                        status: 'পড়ানো হয়েছে'
-                    });
+                        status: 'পড়ানো হয়েছে',
+                        createdAt: firebase.database.ServerValue.TIMESTAMP
+                    };
                 }
             });
             
             // Add payment records for checked students
             paymentCheckboxes.forEach(checkbox => {
-                const studentId = parseInt(checkbox.getAttribute('data-id'));
+                const studentId = checkbox.getAttribute('data-id');
                 const student = students.find(s => s.id === studentId);
                 
                 if (!student) return;
@@ -1001,25 +1137,28 @@
                         return;
                     }
                     
-                    paymentRecords.push({
+                    const newRecordId = database.ref('users/' + userId + '/paymentRecords').push().key;
+                    updates['/users/' + userId + '/paymentRecords/' + newRecordId] = {
                         studentId: studentId,
                         date: date,
-                        status: 'বেতন প্রদান করা হয়েছে'
-                    });
+                        status: 'বেতন প্রদান করা হয়েছে',
+                        createdAt: firebase.database.ServerValue.TIMESTAMP
+                    };
+                    
+                    // Update student's current cycle start date
+                    updates['/users/' + userId + '/students/' + studentId + '/currentCycleStart'] = date;
                 }
             });
             
-            saveTeachingRecords();
-            savePaymentRecords();
-            showAlert('success', 'তথ্য সফলভাবে সেভ করা হয়েছে!');
-            
-            // Update all lists
-            loadStudentLists();
-            loadAttendanceLists();
-            
-            // Update records if on that tab
-            if (document.getElementById('records').classList.contains('active')) {
-                loadStudentRecords();
+            // Execute all updates
+            if (Object.keys(updates).length > 0) {
+                database.ref().update(updates)
+                    .then(() => {
+                        showAlert('success', 'তথ্য সফলভাবে সেভ করা হয়েছে!');
+                    })
+                    .catch(error => {
+                        showAlert('error', `তথ্য সেভ করতে সমস্যা: ${error.message}`);
+                    });
             }
         }
         
@@ -1035,24 +1174,31 @@
                 return;
             }
             
+            const userId = auth.currentUser.uid;
+            const updates = {};
+            
             // Remove teaching records for selected date
-            teachingRecords = teachingRecords.filter(record => record.date !== date);
+            teachingRecords
+                .filter(record => record.date === date)
+                .forEach(record => {
+                    updates['/users/' + userId + '/teachingRecords/' + record.id] = null;
+                });
             
             // Remove payment records for selected date
-            paymentRecords = paymentRecords.filter(record => record.date !== date);
+            paymentRecords
+                .filter(record => record.date === date)
+                .forEach(record => {
+                    updates['/users/' + userId + '/paymentRecords/' + record.id] = null;
+                });
             
-            saveTeachingRecords();
-            savePaymentRecords();
-            showAlert('success', 'রেকর্ডস সফলভাবে রিসেট করা হয়েছে!');
-            
-            // Update all lists
-            loadStudentLists();
-            loadAttendanceLists();
-            
-            // Update records if on that tab
-            if (document.getElementById('records').classList.contains('active')) {
-                loadStudentRecords();
-            }
+            // Execute all updates
+            database.ref().update(updates)
+                .then(() => {
+                    showAlert('success', 'রেকর্ডস সফলভাবে রিসেট করা হয়েছে!');
+                })
+                .catch(error => {
+                    showAlert('error', `রেকর্ডস রিসেট করতে সমস্যা: ${error.message}`);
+                });
         }
         
         // Delete a student and all related records
@@ -1061,44 +1207,46 @@
                 return;
             }
             
+            const userId = auth.currentUser.uid;
+            const updates = {};
+            
             // Delete student
-            students = students.filter(student => student.id !== studentId);
+            updates['/users/' + userId + '/students/' + studentId] = null;
             
             // Delete teaching records
-            teachingRecords = teachingRecords.filter(record => record.studentId !== studentId);
+            teachingRecords
+                .filter(record => record.studentId === studentId)
+                .forEach(record => {
+                    updates['/users/' + userId + '/teachingRecords/' + record.id] = null;
+                });
             
             // Delete payment records
-            paymentRecords = paymentRecords.filter(record => record.studentId !== studentId);
+            paymentRecords
+                .filter(record => record.studentId === studentId)
+                .forEach(record => {
+                    updates['/users/' + userId + '/paymentRecords/' + record.id] = null;
+                });
             
-            // Save all changes
-            saveStudents();
-            saveTeachingRecords();
-            savePaymentRecords();
-            
-            // Update all lists
-            loadStudentLists();
-            
-            // Reload attendance lists if on that tab
-            if (document.getElementById('attendance').classList.contains('active')) {
-                loadAttendanceLists();
-            }
-            
-            // Hide records if showing the deleted student
-            if (document.getElementById('records').classList.contains('active') && 
-                parseInt(document.getElementById('student-select').value) === studentId) {
-                document.getElementById('student-records-container').style.display = 'none';
-                document.getElementById('student-select').value = '';
-            }
-            
-            // Update student dropdown
-            updateStudentDropdown();
-            
-            showAlert('success', 'স্টুডেন্ট এবং সংশ্লিষ্ট সকল রেকর্ড সফলভাবে ডিলেট করা হয়েছে!');
+            // Execute all updates
+            database.ref().update(updates)
+                .then(() => {
+                    showAlert('success', 'স্টুডেন্ট এবং সংশ্লিষ্ট সকল রেকর্ড সফলভাবে ডিলেট করা হয়েছে!');
+                    
+                    // Hide records if showing the deleted student
+                    if (document.getElementById('records').classList.contains('active') && 
+                        document.getElementById('student-select').value === studentId) {
+                        document.getElementById('student-records-container').style.display = 'none';
+                        document.getElementById('student-select').value = '';
+                    }
+                })
+                .catch(error => {
+                    showAlert('error', `স্টুডেন্ট ডিলেট করতে সমস্যা: ${error.message}`);
+                });
         }
         
         // Delete selected student from records tab
         function deleteSelectedStudent() {
-            const studentId = parseInt(document.getElementById('student-select').value);
+            const studentId = document.getElementById('student-select').value;
             if (!studentId) {
                 showAlert('error', 'দয়া করে একটি স্টুডেন্ট সিলেক্ট করুন');
                 return;
