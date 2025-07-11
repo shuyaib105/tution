@@ -432,10 +432,6 @@
                             <option value="B">সেকশন B</option>
                         </select>
                     </div>
-                    <div class="form-group">
-                        <label for="initial-classes"><i class="fas fa-history"></i> পূর্বে পড়ানো হয়েছে (দিন সংখ্যা)</label>
-                        <input type="number" id="initial-classes" min="0" value="0">
-                    </div>
                     <div class="action-buttons">
                         <button type="submit" class="btn-primary"><i class="fas fa-save"></i> রেজিস্টার করুন</button>
                     </div>
@@ -680,7 +676,6 @@
             const nameInput = document.getElementById('name');
             const phoneInput = document.getElementById('phone');
             const sectionInput = document.getElementById('section');
-            const initialClassesInput = document.getElementById('initial-classes');
             
             // Validate inputs
             if (!nameInput.value.trim()) {
@@ -693,18 +688,11 @@
                 return;
             }
             
-            const initialClasses = parseInt(initialClassesInput.value) || 0;
-            if (initialClasses < 0) {
-                showAlert('error', 'পূর্বে পড়ানো দিন সংখ্যা ০ বা তার বেশি হতে হবে');
-                return;
-            }
-            
             const newStudent = {
                 id: Date.now(),
                 name: nameInput.value.trim(),
                 phone: phoneInput.value.trim(),
                 section: sectionInput.value,
-                initialClasses: initialClasses,
                 currentCycleStart: new Date().toISOString().split('T')[0] // Track current cycle start date
             };
             
@@ -715,7 +703,6 @@
             nameInput.value = '';
             phoneInput.value = '';
             sectionInput.value = '';
-            initialClassesInput.value = '0';
             
             // Update student lists
             loadStudentLists();
@@ -796,7 +783,7 @@
             // Set student name
             document.getElementById('student-name-display').innerHTML = `<i class="fas fa-user"></i> ${student.name} (সেকশন ${student.section})`;
             
-            // Calculate total classes (initial + attended since last payment)
+            // Calculate classes since last payment
             const lastPaymentDate = paymentRecords
                 .filter(record => record.studentId === studentId)
                 .sort((a, b) => new Date(b.date) - new Date(a.date))[0]?.date || student.currentCycleStart;
@@ -806,14 +793,13 @@
                 new Date(record.date) >= new Date(lastPaymentDate)
             ).length;
             
-            const totalClasses = attendedClasses;
-            const progressPercent = (totalClasses / 12) * 100;
+            const progressPercent = (attendedClasses / 12) * 100;
             
             // Update progress bar
             document.getElementById('progress-fill').style.width = `${progressPercent}%`;
             
             // Update progress text
-            document.getElementById('progress-text').textContent = `${totalClasses}/12 দিন`;
+            document.getElementById('progress-text').textContent = `${attendedClasses}/12 দিন`;
             
             // Load teaching records
             const studentTeachingRecords = teachingRecords
