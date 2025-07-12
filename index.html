@@ -495,6 +495,90 @@
         .toggle-dates:hover {
             text-decoration: underline;
         }
+
+        /* Edit Modal Styles */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+        }
+
+        .modal-content {
+            background-color: var(--card-bg);
+            margin: 5% auto;
+            padding: 25px;
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+            max-width: 600px;
+            width: 90%;
+            animation: modalFadeIn 0.3s ease;
+        }
+
+        @keyframes modalFadeIn {
+            from { opacity: 0; transform: translateY(-20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .modal-title {
+            color: var(--primary-color);
+            font-size: 1.5rem;
+            font-weight: 700;
+        }
+
+        .close-modal {
+            color: var(--text-light);
+            font-size: 1.5rem;
+            cursor: pointer;
+            transition: color 0.3s ease;
+        }
+
+        .close-modal:hover {
+            color: var(--danger-color);
+        }
+
+        .modal-footer {
+            display: flex;
+            justify-content: flex-end;
+            margin-top: 20px;
+            padding-top: 15px;
+            border-top: 1px solid var(--border-color);
+        }
+
+        /* Action buttons in tables */
+        .action-btn {
+            padding: 6px 12px;
+            margin: 0 3px;
+            font-size: 14px;
+            border-radius: 6px;
+        }
+
+        .btn-sm {
+            padding: 6px 12px;
+            font-size: 14px;
+        }
+
+        .btn-edit {
+            background-color: var(--warning-color);
+            color: white;
+        }
+
+        .btn-edit:hover {
+            background-color: #e07c0e;
+        }
     </style>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <!-- Firebase SDK -->
@@ -503,6 +587,88 @@
     <script src="https://www.gstatic.com/firebasejs/9.6.0/firebase-database-compat.js"></script>
 </head>
 <body>
+    <!-- Edit Student Modal -->
+    <div id="edit-student-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="modal-title"><i class="fas fa-user-edit"></i> স্টুডেন্ট এডিট করুন</h3>
+                <span class="close-modal">&times;</span>
+            </div>
+            <form id="edit-student-form">
+                <input type="hidden" id="edit-student-id">
+                <div class="form-group">
+                    <label for="edit-name"><i class="fas fa-user"></i> স্টুডেন্টের নাম</label>
+                    <input type="text" id="edit-name" required>
+                </div>
+                <div class="form-group">
+                    <label for="edit-phone"><i class="fas fa-phone"></i> ফোন নম্বর</label>
+                    <input type="tel" id="edit-phone">
+                </div>
+                <div class="form-group">
+                    <label for="edit-section"><i class="fas fa-users"></i> সেকশন</label>
+                    <select id="edit-section" required>
+                        <option value="A">শনি - সোম - বুধ</option>
+                        <option value="B">রবি - মঙ্গল - বৃহস্পতি</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="edit-cycle-start"><i class="fas fa-calendar-day"></i> বর্তমান সাইকেল শুরু</label>
+                    <input type="date" id="edit-cycle-start" required>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn-warning" id="cancel-edit-student">বাতিল করুন</button>
+                    <button type="submit" class="btn-primary">সেভ করুন</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Edit Teaching Record Modal -->
+    <div id="edit-teaching-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="modal-title"><i class="fas fa-calendar-check"></i> পড়ানোর রেকর্ড এডিট করুন</h3>
+                <span class="close-modal">&times;</span>
+            </div>
+            <form id="edit-teaching-form">
+                <input type="hidden" id="edit-teaching-id">
+                <input type="hidden" id="edit-teaching-student-id">
+                <div class="form-group">
+                    <label for="edit-teaching-date"><i class="fas fa-calendar-day"></i> তারিখ</label>
+                    <input type="date" id="edit-teaching-date" required>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn-warning" id="cancel-edit-teaching">বাতিল করুন</button>
+                    <button type="submit" class="btn-primary">সেভ করুন</button>
+                    <button type="button" class="btn-danger" id="delete-teaching-record">ডিলেট করুন</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Edit Payment Record Modal -->
+    <div id="edit-payment-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="modal-title"><i class="fas fa-money-bill-wave"></i> বেতনের রেকর্ড এডিট করুন</h3>
+                <span class="close-modal">&times;</span>
+            </div>
+            <form id="edit-payment-form">
+                <input type="hidden" id="edit-payment-id">
+                <input type="hidden" id="edit-payment-student-id">
+                <div class="form-group">
+                    <label for="edit-payment-date"><i class="fas fa-calendar-day"></i> তারিখ</label>
+                    <input type="date" id="edit-payment-date" required>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn-warning" id="cancel-edit-payment">বাতিল করুন</button>
+                    <button type="submit" class="btn-primary">সেভ করুন</button>
+                    <button type="button" class="btn-danger" id="delete-payment-record">ডিলেট করুন</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
     <div class="container">
         <!-- Firebase Auth UI -->
         <div id="auth-container">
@@ -665,6 +831,7 @@
                                 <tr>
                                     <th>তারিখ</th>
                                     <th>স্ট্যাটাস</th>
+                                    <th>অ্যাকশন</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -680,6 +847,7 @@
                                 <tr>
                                     <th>তারিখ</th>
                                     <th>স্ট্যাটাস</th>
+                                    <th>অ্যাকশন</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -771,6 +939,40 @@
             
             // Initialize history student dropdown
             document.getElementById('history-student-select').addEventListener('change', loadCycleHistory);
+            
+            // Initialize modal close buttons
+            document.querySelectorAll('.close-modal, #cancel-edit-student').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    document.getElementById('edit-student-modal').style.display = 'none';
+                });
+            });
+            
+            document.querySelectorAll('.close-modal, #cancel-edit-teaching').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    document.getElementById('edit-teaching-modal').style.display = 'none';
+                });
+            });
+            
+            document.querySelectorAll('.close-modal, #cancel-edit-payment').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    document.getElementById('edit-payment-modal').style.display = 'none';
+                });
+            });
+            
+            // Initialize edit student form
+            document.getElementById('edit-student-form').addEventListener('submit', saveEditedStudent);
+            
+            // Initialize edit teaching form
+            document.getElementById('edit-teaching-form').addEventListener('submit', saveEditedTeaching);
+            
+            // Initialize delete teaching record button
+            document.getElementById('delete-teaching-record').addEventListener('click', deleteTeachingRecord);
+            
+            // Initialize edit payment form
+            document.getElementById('edit-payment-form').addEventListener('submit', saveEditedPayment);
+            
+            // Initialize delete payment record button
+            document.getElementById('delete-payment-record').addEventListener('click', deletePaymentRecord);
         });
         
         // Authentication functions
@@ -1317,10 +1519,20 @@
                     <td>${student.phone || 'N/A'}</td>
                     <td>${attendedClasses}</td>
                     <td>${paymentCount} বার</td>
-                    <td><button class="btn-danger btn-delete" data-id="${student.id}"><i class="fas fa-trash-alt"></i> ডিলেট</button></td>
+                    <td>
+                        <button class="btn-edit action-btn btn-sm" data-id="${student.id}"><i class="fas fa-edit"></i> এডিট</button>
+                        <button class="btn-danger action-btn btn-sm" data-id="${student.id}"><i class="fas fa-trash-alt"></i> ডিলেট</button>
+                    </td>
                 `;
                 
                 tableBody.appendChild(row);
+            });
+            
+            // Add event listeners to edit buttons
+            document.querySelectorAll('.btn-edit').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    editStudent(this.getAttribute('data-id'));
+                });
             });
             
             // Add event listeners to delete buttons
@@ -1337,7 +1549,7 @@
             tableBody.innerHTML = '';
             
             if (records.length === 0) {
-                tableBody.innerHTML = `<tr><td colspan="2">কোনো রেকর্ড পাওয়া যায়নি</td></tr>`;
+                tableBody.innerHTML = `<tr><td colspan="3">কোনো রেকর্ড পাওয়া যায়নি</td></tr>`;
                 return;
             }
             
@@ -1347,9 +1559,229 @@
                 row.innerHTML = `
                     <td>${formatDate(record.date)}</td>
                     <td>${statusText}</td>
+                    <td>
+                        <button class="btn-edit action-btn" data-id="${record.id}" data-student-id="${record.studentId}">
+                            <i class="fas fa-edit"></i> এডিট
+                        </button>
+                    </td>
                 `;
                 tableBody.appendChild(row);
             });
+            
+            // Add event listeners to edit buttons
+            document.querySelectorAll('.btn-edit').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    const recordId = this.getAttribute('data-id');
+                    const studentId = this.getAttribute('data-student-id');
+                    
+                    if (elementId === 'teaching-records') {
+                        editTeachingRecord(recordId, studentId);
+                    } else if (elementId === 'payment-records') {
+                        editPaymentRecord(recordId, studentId);
+                    }
+                });
+            });
+        }
+        
+        // Edit student information
+        function editStudent(studentId) {
+            const student = students.find(s => s.id === studentId);
+            if (!student) return;
+            
+            // Fill the form with student data
+            document.getElementById('edit-student-id').value = student.id;
+            document.getElementById('edit-name').value = student.name;
+            document.getElementById('edit-phone').value = student.phone || '';
+            document.getElementById('edit-section').value = student.section;
+            document.getElementById('edit-cycle-start').value = student.currentCycleStart;
+            
+            // Show the modal
+            document.getElementById('edit-student-modal').style.display = 'block';
+        }
+        
+        // Save edited student information
+        function saveEditedStudent(e) {
+            e.preventDefault();
+            
+            const studentId = document.getElementById('edit-student-id').value;
+            const name = document.getElementById('edit-name').value.trim();
+            const phone = document.getElementById('edit-phone').value.trim();
+            const section = document.getElementById('edit-section').value;
+            const currentCycleStart = document.getElementById('edit-cycle-start').value;
+            
+            if (!name || !section || !currentCycleStart) {
+                showAlert('error', 'দয়া করে সকল প্রয়োজনীয় তথ্য প্রদান করুন');
+                return;
+            }
+            
+            const userId = auth.currentUser.uid;
+            const updates = {
+                name: name,
+                phone: phone,
+                section: section,
+                currentCycleStart: currentCycleStart
+            };
+            
+            database.ref('users/' + userId + '/students/' + studentId).update(updates)
+                .then(() => {
+                    showAlert('success', 'স্টুডেন্ট তথ্য সফলভাবে আপডেট করা হয়েছে!');
+                    document.getElementById('edit-student-modal').style.display = 'none';
+                })
+                .catch(error => {
+                    showAlert('error', `স্টুডেন্ট আপডেট করতে সমস্যা: ${error.message}`);
+                });
+        }
+        
+        // Edit teaching record
+        function editTeachingRecord(recordId, studentId) {
+            const record = teachingRecords.find(r => r.id === recordId);
+            if (!record) return;
+            
+            // Fill the form with record data
+            document.getElementById('edit-teaching-id').value = record.id;
+            document.getElementById('edit-teaching-student-id').value = record.studentId;
+            document.getElementById('edit-teaching-date').value = record.date;
+            
+            // Show the modal
+            document.getElementById('edit-teaching-modal').style.display = 'block';
+        }
+        
+        // Save edited teaching record
+        function saveEditedTeaching(e) {
+            e.preventDefault();
+            
+            const recordId = document.getElementById('edit-teaching-id').value;
+            const studentId = document.getElementById('edit-teaching-student-id').value;
+            const date = document.getElementById('edit-teaching-date').value;
+            
+            if (!date) {
+                showAlert('error', 'দয়া করে তারিখ প্রদান করুন');
+                return;
+            }
+            
+            const userId = auth.currentUser.uid;
+            const updates = {
+                date: date,
+                studentId: studentId
+            };
+            
+            database.ref('users/' + userId + '/teachingRecords/' + recordId).update(updates)
+                .then(() => {
+                    showAlert('success', 'পড়ানোর রেকর্ড সফলভাবে আপডেট করা হয়েছে!');
+                    document.getElementById('edit-teaching-modal').style.display = 'none';
+                    
+                    // Reload student records if showing this student
+                    const selectedStudent = document.getElementById('student-select').value;
+                    if (selectedStudent === studentId) {
+                        loadStudentRecords();
+                    }
+                })
+                .catch(error => {
+                    showAlert('error', `পড়ানোর রেকর্ড আপডেট করতে সমস্যা: ${error.message}`);
+                });
+        }
+        
+        // Delete teaching record
+        function deleteTeachingRecord() {
+            const recordId = document.getElementById('edit-teaching-id').value;
+            const studentId = document.getElementById('edit-teaching-student-id').value;
+            
+            if (!confirm('আপনি কি নিশ্চিত এই পড়ানোর রেকর্ড ডিলেট করতে চান?')) {
+                return;
+            }
+            
+            const userId = auth.currentUser.uid;
+            
+            database.ref('users/' + userId + '/teachingRecords/' + recordId).remove()
+                .then(() => {
+                    showAlert('success', 'পড়ানোর রেকর্ড সফলভাবে ডিলেট করা হয়েছে!');
+                    document.getElementById('edit-teaching-modal').style.display = 'none';
+                    
+                    // Reload student records if showing this student
+                    const selectedStudent = document.getElementById('student-select').value;
+                    if (selectedStudent === studentId) {
+                        loadStudentRecords();
+                    }
+                })
+                .catch(error => {
+                    showAlert('error', `পড়ানোর রেকর্ড ডিলেট করতে সমস্যা: ${error.message}`);
+                });
+        }
+        
+        // Edit payment record
+        function editPaymentRecord(recordId, studentId) {
+            const record = paymentRecords.find(r => r.id === recordId);
+            if (!record) return;
+            
+            // Fill the form with record data
+            document.getElementById('edit-payment-id').value = record.id;
+            document.getElementById('edit-payment-student-id').value = record.studentId;
+            document.getElementById('edit-payment-date').value = record.date;
+            
+            // Show the modal
+            document.getElementById('edit-payment-modal').style.display = 'block';
+        }
+        
+        // Save edited payment record
+        function saveEditedPayment(e) {
+            e.preventDefault();
+            
+            const recordId = document.getElementById('edit-payment-id').value;
+            const studentId = document.getElementById('edit-payment-student-id').value;
+            const date = document.getElementById('edit-payment-date').value;
+            
+            if (!date) {
+                showAlert('error', 'দয়া করে তারিখ প্রদান করুন');
+                return;
+            }
+            
+            const userId = auth.currentUser.uid;
+            const updates = {
+                date: date,
+                studentId: studentId
+            };
+            
+            database.ref('users/' + userId + '/paymentRecords/' + recordId).update(updates)
+                .then(() => {
+                    showAlert('success', 'বেতনের রেকর্ড সফলভাবে আপডেট করা হয়েছে!');
+                    document.getElementById('edit-payment-modal').style.display = 'none';
+                    
+                    // Reload student records if showing this student
+                    const selectedStudent = document.getElementById('student-select').value;
+                    if (selectedStudent === studentId) {
+                        loadStudentRecords();
+                    }
+                })
+                .catch(error => {
+                    showAlert('error', `বেতনের রেকর্ড আপডেট করতে সমস্যা: ${error.message}`);
+                });
+        }
+        
+        // Delete payment record
+        function deletePaymentRecord() {
+            const recordId = document.getElementById('edit-payment-id').value;
+            const studentId = document.getElementById('edit-payment-student-id').value;
+            
+            if (!confirm('আপনি কি নিশ্চিত এই বেতনের রেকর্ড ডিলেট করতে চান?')) {
+                return;
+            }
+            
+            const userId = auth.currentUser.uid;
+            
+            database.ref('users/' + userId + '/paymentRecords/' + recordId).remove()
+                .then(() => {
+                    showAlert('success', 'বেতনের রেকর্ড সফলভাবে ডিলেট করা হয়েছে!');
+                    document.getElementById('edit-payment-modal').style.display = 'none';
+                    
+                    // Reload student records if showing this student
+                    const selectedStudent = document.getElementById('student-select').value;
+                    if (selectedStudent === studentId) {
+                        loadStudentRecords();
+                    }
+                })
+                .catch(error => {
+                    showAlert('error', `বেতনের রেকর্ড ডিলেট করতে সমস্যা: ${error.message}`);
+                });
         }
         
         // Save records
