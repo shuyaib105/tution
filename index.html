@@ -419,6 +419,82 @@
             font-weight: 600;
             margin-right: 15px;
         }
+
+        /* Cycle History Styles */
+        .cycle-card {
+            background: var(--light-color);
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 15px;
+            border-left: 4px solid var(--primary-color);
+        }
+
+        .cycle-header {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 10px;
+            font-weight: 600;
+            color: var(--primary-color);
+        }
+
+        .cycle-dates {
+            font-size: 0.9em;
+            color: var(--text-light);
+            margin-bottom: 10px;
+        }
+
+        .cycle-stats {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 10px;
+        }
+
+        .stat-item {
+            text-align: center;
+            flex: 1;
+        }
+
+        .stat-value {
+            font-weight: 700;
+            font-size: 1.2em;
+        }
+
+        .stat-label {
+            font-size: 0.8em;
+            color: var(--text-light);
+        }
+
+        .teaching-dates {
+            margin-top: 10px;
+            padding: 10px;
+            background: white;
+            border-radius: 8px;
+            max-height: 200px;
+            overflow-y: auto;
+        }
+
+        .teaching-date-item {
+            padding: 5px;
+            border-bottom: 1px solid #eee;
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .teaching-date-item:last-child {
+            border-bottom: none;
+        }
+
+        .toggle-dates {
+            color: var(--primary-color);
+            cursor: pointer;
+            font-size: 0.9em;
+            margin-top: 5px;
+            display: inline-block;
+        }
+
+        .toggle-dates:hover {
+            text-decoration: underline;
+        }
     </style>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <!-- Firebase SDK -->
@@ -452,6 +528,7 @@
             <button class="tab active" data-section="registration"><i class="fas fa-user-plus"></i> রেজিস্ট্রেশন</button>
             <button class="tab" data-section="attendance"><i class="fas fa-calendar-check"></i> পড়ানো/বেতন</button>
             <button class="tab" data-section="records"><i class="fas fa-database"></i> সমস্ত রেকর্ড</button>
+            <button class="tab" data-section="history"><i class="fas fa-history"></i> সাইকেল ইতিহাস</button>
         </div>
         
         <!-- Registration Section -->
@@ -468,11 +545,11 @@
                         <input type="tel" id="phone">
                     </div>
                     <div class="form-group">
-                        <label for="section"><i class="fas fa-users"></i> দিন সমূহ</label>
+                        <label for="section"><i class="fas fa-users"></i> সেকশন</label>
                         <select id="section" required>
                             <option value="">সিলেক্ট করুন</option>
-                            <option value="শনি - সোম - বুধ">শনি - সোম - বুধ</option>
-                            <option value="রবি - মঙ্গল - বৃহস্পতি">রবি - মঙ্গল - বৃহস্পতি</option>
+                            <option value="A">শনি - সোম - বুধ</option>
+                            <option value="B">রবি - মঙ্গল - বৃহস্পতি</option>
                         </select>
                     </div>
                     <div class="action-buttons">
@@ -617,6 +694,28 @@
                 </div>
             </div>
         </div>
+
+        <!-- Cycle History Section -->
+        <div class="section-content" id="history">
+            <div class="card">
+                <h2><i class="fas fa-history"></i> সাইকেল ইতিহাস</h2>
+                
+                <div class="form-group">
+                    <label for="history-student-select"><i class="fas fa-user"></i> স্টুডেন্ট সিলেক্ট করুন</label>
+                    <select id="history-student-select">
+                        <option value="">সিলেক্ট করুন</option>
+                    </select>
+                </div>
+                
+                <div id="cycle-history-container" style="display:none;">
+                    <h3 id="history-student-name"></h3>
+                    
+                    <div id="cycle-history-list">
+                        <!-- Cycle history cards will be inserted here -->
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
 
     <script>
@@ -669,6 +768,9 @@
             
             // Initialize delete student button
             document.getElementById('delete-student').addEventListener('click', deleteSelectedStudent);
+            
+            // Initialize history student dropdown
+            document.getElementById('history-student-select').addEventListener('change', loadCycleHistory);
         });
         
         // Authentication functions
@@ -705,6 +807,9 @@
         function googleSignIn() {
             const provider = new firebase.auth.GoogleAuthProvider();
             auth.signInWithPopup(provider)
+                .then(() => {
+                    showAlert('success', 'সফলভাবে লগইন করা হয়েছে!');
+                })
                 .catch((error) => {
                     showAlert('error', `লগইন ব্যর্থ: ${error.message}`);
                 });
@@ -718,6 +823,7 @@
         // Load data from Firebase
         function loadData() {
             const userId = auth.currentUser.uid;
+            if (!userId) return;
             
             // Load students
             database.ref('users/' + userId + '/students').on('value', (snapshot) => {
@@ -729,6 +835,7 @@
                     });
                 });
                 loadStudentLists();
+                updateStudentDropdowns();
             });
             
             // Load teaching records
@@ -740,6 +847,10 @@
                         ...childSnapshot.val()
                     });
                 });
+                // Refresh attendance lists if attendance tab is active
+                if (document.getElementById('attendance').classList.contains('active')) {
+                    loadAttendanceLists();
+                }
             });
             
             // Load payment records
@@ -751,6 +862,16 @@
                         ...childSnapshot.val()
                     });
                 });
+                // Refresh records if records tab is active
+                if (document.getElementById('records').classList.contains('active')) {
+                    const selectedStudent = document.getElementById('student-select').value;
+                    if (selectedStudent) loadStudentRecords();
+                }
+                // Refresh history if history tab is active
+                if (document.getElementById('history').classList.contains('active')) {
+                    const selectedStudent = document.getElementById('history-student-select').value;
+                    if (selectedStudent) loadCycleHistory();
+                }
             });
         }
         
@@ -771,14 +892,17 @@
                     const sectionId = this.getAttribute('data-section');
                     document.getElementById(sectionId).classList.add('active');
                     
-                    // If attendance tab is clicked, load attendance lists
-                    if (sectionId === 'attendance') {
-                        loadAttendanceLists();
-                    }
-                    
-                    // If records tab is clicked, update student dropdown
-                    if (sectionId === 'records') {
-                        updateStudentDropdown();
+                    // Load appropriate data based on tab
+                    switch(sectionId) {
+                        case 'attendance':
+                            loadAttendanceLists();
+                            break;
+                        case 'records':
+                            updateStudentDropdowns();
+                            break;
+                        case 'history':
+                            updateStudentDropdowns();
+                            break;
                     }
                 });
             });
@@ -877,21 +1001,27 @@
             renderAttendanceList('attendance-list-b', sectionBStudents);
         }
         
-        // Update student dropdown for records
-        function updateStudentDropdown() {
+        // Update student dropdowns for records and history
+        function updateStudentDropdowns() {
             const dropdown = document.getElementById('student-select');
+            const historyDropdown = document.getElementById('history-student-select');
             
             // Clear existing options (except the first one)
             while (dropdown.options.length > 1) {
                 dropdown.remove(1);
             }
             
-            // Add students to dropdown
+            while (historyDropdown.options.length > 1) {
+                historyDropdown.remove(1);
+            }
+            
+            // Add students to dropdowns
             students.forEach(student => {
                 const option = document.createElement('option');
                 option.value = student.id;
                 option.textContent = `${student.name} (সেকশন ${student.section})`;
-                dropdown.appendChild(option);
+                dropdown.appendChild(option.cloneNode(true));
+                historyDropdown.appendChild(option);
             });
         }
         
@@ -924,13 +1054,18 @@
                 new Date(record.date) >= new Date(lastPaymentDate)
             ).length;
             
-            const progressPercent = (attendedClasses / 12) * 100;
+            const progressPercent = Math.min((attendedClasses / 12) * 100, 100);
             
             // Update progress bar
             document.getElementById('progress-fill').style.width = `${progressPercent}%`;
             
             // Update progress text
             document.getElementById('progress-text').textContent = `${attendedClasses}/12 দিন`;
+            if (attendedClasses >= 12) {
+                document.getElementById('progress-text').classList.add('completed');
+            } else {
+                document.getElementById('progress-text').classList.remove('completed');
+            }
             
             // Load teaching records
             const studentTeachingRecords = teachingRecords
@@ -945,6 +1080,167 @@
                 .sort((a, b) => new Date(b.date) - new Date(a.date));
             
             renderRecordsList('payment-records', studentPaymentRecords, '<i class="fas fa-check"></i> বেতন প্রদান', 'payment-record');
+        }
+        
+        // Load cycle history for a student
+        function loadCycleHistory() {
+            const studentId = document.getElementById('history-student-select').value;
+            const container = document.getElementById('cycle-history-container');
+            
+            if (!studentId) {
+                container.style.display = 'none';
+                return;
+            }
+            
+            const student = students.find(s => s.id === studentId);
+            if (!student) return;
+            
+            // Show container
+            container.style.display = 'block';
+            
+            // Set student name
+            document.getElementById('history-student-name').innerHTML = `<i class="fas fa-user"></i> ${student.name} (সেকশন ${student.section})`;
+            
+            // Get all payment records for this student, sorted by date (newest first)
+            const studentPayments = paymentRecords
+                .filter(record => record.studentId === studentId)
+                .sort((a, b) => new Date(b.date) - new Date(a.date));
+            
+            // Get all teaching records for this student, sorted by date
+            const studentTeachings = teachingRecords
+                .filter(record => record.studentId === studentId)
+                .sort((a, b) => new Date(a.date) - new Date(b.date));
+            
+            // Prepare cycle data
+            const cycles = [];
+            
+            // Add current cycle (not yet paid)
+            cycles.push({
+                startDate: student.currentCycleStart,
+                endDate: null,
+                paymentDate: null,
+                classCount: studentTeachings
+                    .filter(t => new Date(t.date) >= new Date(student.currentCycleStart))
+                    .length,
+                cycleType: 'current',
+                teachingDates: studentTeachings
+                    .filter(t => new Date(t.date) >= new Date(student.currentCycleStart))
+                    .map(t => t.date)
+                    .sort((a, b) => new Date(b) - new Date(a))
+            });
+            
+            // Add previous cycles
+            let nextDate = new Date().toISOString().split('T')[0];
+            studentPayments.forEach((payment) => {
+                cycles.push({
+                    startDate: payment.date,
+                    endDate: nextDate,
+                    paymentDate: payment.date,
+                    classCount: studentTeachings
+                        .filter(t => new Date(t.date) >= new Date(payment.date) && new Date(t.date) <= new Date(nextDate))
+                        .length,
+                    cycleType: 'previous',
+                    teachingDates: studentTeachings
+                        .filter(t => new Date(t.date) >= new Date(payment.date) && new Date(t.date) <= new Date(nextDate))
+                        .map(t => t.date)
+                        .sort((a, b) => new Date(b) - new Date(a))
+                });
+                nextDate = payment.date;
+            });
+            
+            // The earliest cycle (from registration to first payment)
+            if (studentPayments.length > 0) {
+                const firstPayment = studentPayments[studentPayments.length - 1];
+                cycles.push({
+                    startDate: student.currentCycleStart,
+                    endDate: firstPayment.date,
+                    paymentDate: firstPayment.date,
+                    classCount: studentTeachings
+                        .filter(t => new Date(t.date) >= new Date(student.currentCycleStart) && new Date(t.date) <= new Date(firstPayment.date))
+                        .length,
+                    cycleType: 'previous',
+                    teachingDates: studentTeachings
+                        .filter(t => new Date(t.date) >= new Date(student.currentCycleStart) && new Date(t.date) <= new Date(firstPayment.date))
+                        .map(t => t.date)
+                        .sort((a, b) => new Date(b) - new Date(a))
+                });
+            }
+            
+            // Render cycle history
+            renderCycleHistory(cycles);
+        }
+        
+        // Render cycle history
+        function renderCycleHistory(cycles) {
+            const container = document.getElementById('cycle-history-list');
+            container.innerHTML = '';
+            
+            if (cycles.length === 0) {
+                container.innerHTML = '<p>কোনো সাইকেল ইতিহাস পাওয়া যায়নি</p>';
+                return;
+            }
+            
+            // Sort cycles by start date (newest first)
+            cycles.sort((a, b) => new Date(b.startDate) - new Date(a.startDate));
+            
+            cycles.forEach((cycle, index) => {
+                const cycleCard = document.createElement('div');
+                cycleCard.className = 'cycle-card';
+                
+                const isCurrent = cycle.cycleType === 'current';
+                const cycleTitle = isCurrent ? 'বর্তমান সাইকেল' : `সাইকেল ${index + 1}`;
+                
+                cycleCard.innerHTML = `
+                    <div class="cycle-header">
+                        <span>${cycleTitle}</span>
+                        ${isCurrent ? '<span class="badge badge-warning">চলমান</span>' : '<span class="badge badge-success">সম্পূর্ণ</span>'}
+                    </div>
+                    <div class="cycle-dates">
+                        <span><i class="fas fa-calendar-day"></i> শুরু: ${formatDate(cycle.startDate)}</span>
+                        ${cycle.endDate ? `<span><i class="fas fa-calendar-check"></i> শেষ: ${formatDate(cycle.endDate)}</span>` : ''}
+                    </div>
+                    <div class="cycle-stats">
+                        <div class="stat-item">
+                            <div class="stat-value">${cycle.classCount}</div>
+                            <div class="stat-label">মোট ক্লাস</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-value">${cycle.paymentDate ? 'প্রদান' : 'বাকি'}</div>
+                            <div class="stat-label">স্ট্যাটাস</div>
+                        </div>
+                        ${cycle.paymentDate ? `
+                        <div class="stat-item">
+                            <div class="stat-value">${formatDate(cycle.paymentDate)}</div>
+                            <div class="stat-label">বেতনের তারিখ</div>
+                        </div>` : ''}
+                    </div>
+                    <div class="toggle-dates" onclick="toggleTeachingDates(this)">
+                        <i class="fas fa-calendar-alt"></i> পড়ানোর তারিখগুলো দেখুন
+                    </div>
+                    <div class="teaching-dates" style="display:none;">
+                        ${cycle.teachingDates.map(date => `
+                            <div class="teaching-date-item">
+                                <span>${formatDate(date)}</span>
+                                <span class="badge badge-primary">পড়ানো হয়েছে</span>
+                            </div>
+                        `).join('')}
+                    </div>
+                `;
+                
+                container.appendChild(cycleCard);
+            });
+        }
+        
+        // Toggle teaching dates visibility
+        function toggleTeachingDates(element) {
+            const datesContainer = element.nextElementSibling;
+            if (datesContainer.style.display === 'none') {
+                datesContainer.style.display = 'block';
+                element.innerHTML = '<i class="fas fa-calendar-alt"></i> পড়ানোর তারিখগুলো লুকান';
+            } else {
+                datesContainer.style.display = 'none';
+                element.innerHTML = '<i class="fas fa-calendar-alt"></i> পড়ানোর তারিখগুলো দেখুন';
+            }
         }
         
         // Render attendance list for a section
@@ -1237,6 +1533,13 @@
                         document.getElementById('student-select').value === studentId) {
                         document.getElementById('student-records-container').style.display = 'none';
                         document.getElementById('student-select').value = '';
+                    }
+                    
+                    // Hide history if showing the deleted student
+                    if (document.getElementById('history').classList.contains('active') && 
+                        document.getElementById('history-student-select').value === studentId) {
+                        document.getElementById('cycle-history-container').style.display = 'none';
+                        document.getElementById('history-student-select').value = '';
                     }
                 })
                 .catch(error => {
